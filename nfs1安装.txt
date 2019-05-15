@@ -1,1 +1,90 @@
-saaddsdas
+安装NFS软件
+yum install -y nfs-utils
+
+固定nfs服务端口
+1.    修改/etc/sysconfig/nfs文件，将下列内容的注释去掉，如果没有则添加：
+
+RQUOTAD_PORT=875
+
+LOCKD_TCPPORT=32803
+
+LOCKD_UDPPORT=32769
+
+MOUNTD_PORT=892
+
+设置防火墙
+#portmap:111  #nfsd:2049 #rquotad:875   #mountd:892  #lockd:32803/tcp  32769 /udp
+
+firewall-cmd --zone=public--add-port=111/tcp --add-port=111/udp --add-port=2049/tcp --add-port=2049/udp--add-port=875/tcp --add-port=875/udp --add-port=892/tcp --add-port=892/udp--add-port=32803/tcp --add-port=32769 /udp –permanent
+
+移除：
+
+firewall-cmd --zone=public --remove-port=111/tcp--remove-port=111/udp --remove-port=2049/tcp --remove-port=2049/udp --remove-port=875/tcp--remove-port=875/udp --remove-port=892/tcp --remove-port=892/udp --remove-port=32803/tcp--remove-port=32769/udp --permanent
+
+firewall-cmd –reload
+
+
+
+
+cat /etc/fstab 
+/data *(rw,sync,fsid=0,anonuid=1000,anongid=1000,root_squash)
+---------
+参数：
+ro：目录只读
+rw：目录读写
+sync：将数据同步写入内存缓冲区与磁盘中，效率低，但可以保证数据的一致性
+async：将数据先保存在内存缓冲区中，必要时才写入磁盘
+all_squash：将远程访问的所有普通用户及所属组都映射为匿名用户或用户组(nfsnobody)
+no_all_squash：与all_squash取反(默认设置)
+root_squash：将root用户及所属组都映射为匿名用户或用户组(默认设置)
+no_root_squash：与rootsquash取反
+anonuid=xxx：将远程访问的所有用户都映射为匿名用户，并指定该用户为本地用户(UID=xxx)
+anongid=xxx：将远程访问的所有用户组都映射为匿名用户组账户
+
+------------------------------------------
+NFS命令工具
+exportfs：用来管理当前NFS共享的文件系统列表。 
+-a 打开或取消所有目录共享。 
+-o options,…指定一列共享选项，与 exports(5) 中讲到的类似。 
+-i 忽略 /etc/exports 文件，从而只使用默认的和命令行指定的选项。 
+-r 重新共享所有目录。它使 /var/lib/nfs/xtab 和 /etc/exports 同步。 它将 /etc/exports 中已删除的条目从 /var/lib/nfs/xtab 中删除，将内核共享表中任何不再有效的条目移除。 
+-u 取消一个或多个目录的共享。 
+-f 在“新”模式下，刷新内核共享表之外的任何东西。 任何活动的客户程序将在它们的下次请求中得到 mountd添加的新的共享条目。 
+-v 输出详细信息。当共享或者取消共享时，显示在做什么。 显示当前共享列表的时候，同时显示共享的选项。
+
+nfsstat：用于列出NFS客户端和服务器的工作状态。 
+-s：仅列出NFS服务器端状态； 
+-c：仅列出NFS客户端状态； 
+-n：仅列出NFS状态，默认显示nfs客户端和服务器的状态； 
+-2：仅列出NFS版本2的状态； 
+-3：仅列出NFS版本3的状态； 
+-4：仅列出NFS版本4的状态； 
+-m：打印以加载的nfs文件系统状态； 
+-r：仅打印rpc状态。
+---------------------------------------
+systemctl enable rpcbind.service
+systemctl start rpcbind.service
+systemctl enable nfs-server.service
+systemctl start nfs-server.service
+------------------------------------
+(如果更改配置可以直接使用以下命令生效）
+ exportfs -rv
+ 
+ -----------------------------------
+ 客服端挂载
+ yum install -y nfs-utils
+ 
+ 去发现
+ [qwe@master193 ~]$ showmount -e 172.16.8.19
+Export list for 172.16.8.19:
+/data *
+
+挂载
+mount 172.16.8.19:/data /mnt/
+
+
+ 
+ 
+ 
+
+
